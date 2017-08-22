@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "BuildHandler.generated.h"
 
-
+//This struct allows for a 'cheat' for Unreal's lack of double arrays.
 USTRUCT()
 struct FBuildingBlockRows
 {
@@ -39,53 +39,40 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
 
+	//Default Building Block. Set outside in the editor
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<class ABuildingBlock> BB;
 
-	/*
-	UPROPERTY(EditAnywhere)
-	class ACustom_Try2Character* Character;
-	*/
-	/*
-	// Old Way
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AActor> FourWayMazePiece;
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AActor> CornerPiece;
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AActor> TwoWayHallwayPiece;
-	*/
+
+	//An array holding all the MazePieces. Set outside in the Unreal editor
 	UPROPERTY(EditDefaultsOnly)
 		TArray<TSubclassOf<class AMazePiece>> MazePieces;
-	//TArray<TSubclassOf<class AActor>> MazePieces;
+	
+	//Nothing here yet
 	UPROPERTY(EditDefaultsOnly)
 		TArray<TSubclassOf<class AActor>> RoomPieces;
-	/*
-	UPROPERTY(EditAnywhere)
-	class ABuildingBlock* BB;
-	*/
+
+	//Amount of columns in the level, will be changeable later
 	UPROPERTY(EditAnywhere)
 		int columns = 7;
+
+	//Amount of rows in the level, will be changeable later
 	UPROPERTY(EditAnywhere)
 		int rows = 7;
-	//UFUNCTION()
-	//void placePiece(int pieceNumber, class ABuildingBlock* Spawner, UWorld* World);
-	//UFUNCTION()
 
-	//Will Likely Change
-	//DISCLAIMER: TESTING
-	//Change Return Type To Void
-	//void placePiece(int pieceNumber, int rotationNumber, class ABuildingBlock* Spawner, UWorld* World);
-	TArray<bool> placePiece(int pieceNumber, int rotationNumber, class ABuildingBlock* Spawner, UWorld* World);
-	//Will Likely Change
-	//DISCLAIMER: TESTING
+	//This method places a piece in the level
+	TArray<bool> placePiece(int pieceNumber, int rotationNumber, class ABuildingBlock* Spawner);
+	
+	//This method calculates which ends are open and which ones are closed
 	TArray<bool> Recalculate(TArray<bool> end, int rotationNumber);
-	//void Recalculate(TArray<bool>* end, int rotationNumber);
 
-
+	//Since Unreal does not allow for double arrays, I had to create an array of structs called FBuildingBlockRows which holds an array of building blocks
 	TArray<FBuildingBlockRows*> BuildingBlockColumns;
 
+	//Method to load the level's maze pieces
 	void LoadLevel();
+	//Method to save the level's maze pieces
 	void SaveLevel();
 };

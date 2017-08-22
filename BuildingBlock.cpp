@@ -144,7 +144,7 @@ void ABuildingBlock::SwitchMaterialToHighlighted(int columnsToSelect, int rowsTo
 
 			piece = NULL;
 		}
-		theBuildHandler->placePiece(pieceNum, rotationNum, this, GetWorld());
+		theBuildHandler->placePiece(pieceNum, rotationNum, this);
 
 	}
 	/*
@@ -238,7 +238,7 @@ void ABuildingBlock::SwitchMaterialToSelected(int columnsToSelect, int rowsToSel
 				piece->Destroy(); 
 				piece = NULL;
 			}
-			Ends = theBuildHandler->placePiece(pieceNum, rotationNum, this, GetWorld());
+			Ends = theBuildHandler->placePiece(pieceNum, rotationNum, this);
 			//Mesh->ToggleVisibility();
 			//Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			//Mesh->SetWorldScale3D(FVector(0.f));

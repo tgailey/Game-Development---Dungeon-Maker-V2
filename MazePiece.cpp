@@ -19,7 +19,7 @@ void AMazePiece::BeginPlay()
 	Super::BeginPlay();
 
 	FActorSpawnParameters SpawnInfo;
-
+	//Spawn End pieces at every single end
 	thePiece = GetWorld()->SpawnActor<AActor>(Piece, this->GetActorLocation(), this->GetActorRotation(), SpawnInfo);
 	thePiece->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	theEnds.Add(GetWorld()->SpawnActor<AActor>(Ends[0], this->GetActorLocation(), this->GetActorRotation(), SpawnInfo));
@@ -35,6 +35,7 @@ void AMazePiece::BeginPlay()
 	theEnds[3]->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	theEnds[3]->SetActorRotation(FRotator::ZeroRotator);
 
+	//allow to check ends
 	checkEnds = true;
 }
 
@@ -52,6 +53,7 @@ void AMazePiece::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//If check ends is true, call function check ends
 	if (checkEnds) {
 		if (theBuildHandler && theBuildingBlock) {
 			CheckEnds();
@@ -60,6 +62,7 @@ void AMazePiece::Tick(float DeltaTime)
 	}
 }
 
+//This code checks the ends and determines if the must be removed
 void AMazePiece::CheckEnds()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("CheckEndsCalled"));

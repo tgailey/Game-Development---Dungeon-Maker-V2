@@ -48,5 +48,6 @@ public:
 	//UPROPERTY(BlueprintReadable, Category = "MazePiece")
 	class ABuildingBlock* theBuildingBlock;
 
+	//This allows for the game to check the ends of piece so that it is not always checking all the time with every maze piece
 	bool checkEnds = false;
 };

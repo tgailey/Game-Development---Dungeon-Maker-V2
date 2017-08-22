@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// This handles the building of every maze piece in game. At start of level, this creates all the building blocks from scratch based off save.
 
 #include "BuildHandler.h"
 #include "BuildingBlock.h"
@@ -11,14 +11,6 @@ ABuildHandler::ABuildHandler()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	//BuildingBlockColumns.Init(CreateDefaultSubobject<FBuildingBlockRows>(TEXT("Column_")), columns);
-	//BuildingBlockColumns.Init(NULL, columns);
-	//BuildingBlockColumns.Init(NewObject())
-	//BuildingBlockColumns.SetNum(columns);
-	//for (int i = 0; i < columns; i++) {
-	//BuildingBlockColumns[i]->BuildingBlockRows.Init(CreateDefaultSubobject<ABuildingBlock>(TEXT("Rows_")),rows);
-	//BuildingBlockColumns[i]->BuildingBlockRows.Init(NULL, rows);
-	//}
 
 }
 
@@ -27,10 +19,13 @@ void ABuildHandler::BeginPlay()
 {
 	Super::BeginPlay();
 	//Like many things, the code below is messy and unruly... will find better method later for naming and the like.
+
+	//If the save exists, call the load level method
 	if (UGameplayStatics::DoesSaveGameExist(TEXT("TestSaveSlot"), 0)) {
 		LoadLevel();
 	}
 	else {
+		//Otherwise, run through this double for loop and created a building block in every position, and place a fourway maze piece at center
 		float YPos = 0.f - columns / 2 * 3200.0f;
 		float XPos = 0.f + rows / 2 * 3200.0f;
 		FActorSpawnParameters SpawnInfo;
@@ -40,22 +35,20 @@ void ABuildHandler::BeginPlay()
 				BuildingBlockColumns.Add(new FBuildingBlockRows());
 				for (int j = 0; j < rows; j++) {
 					FVector WorldLocation = FVector(XPos, YPos, 145.f);
+					//If Center, created a piece at that location
 					if (j == rows / 2 && i == columns / 2)
 					{
 						BuildingBlockColumns[i]->BuildingBlockRows.Add(GetWorld()->SpawnActor<ABuildingBlock>(BB, WorldLocation, FRotator::ZeroRotator, SpawnInfo));
-						//UE_LOG(LogTemp, Warning, TEXT("BlockBuilt"));
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->SetActorScale3D(FVector(42.5f));
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->theBuildHandler = this;
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->column = i;
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->row = j;
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->SwitchMaterialToSelected(1, 1, 1, 0);
-						//UGameplayStatics::GetPlayerPawn(this, 0)->SetActorLocation(WorldLocation);
 					}
+					//Else, just have the empty building block
 					else {
 
-						//BuildingBlockColumns[i]->BuildingBlockRows[j] = GetWorld()->SpawnActor<ABuildingBlock>(BB, WorldLocation, FRotator::ZeroRotator, SpawnInfo);
 						BuildingBlockColumns[i]->BuildingBlockRows.Add(GetWorld()->SpawnActor<ABuildingBlock>(BB, WorldLocation, FRotator::ZeroRotator, SpawnInfo));
-						//UE_LOG(LogTemp, Warning, TEXT("BlockBuilt"));
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->SetActorScale3D(FVector(42.5f));
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->theBuildHandler = this;
 						BuildingBlockColumns[i]->BuildingBlockRows[j]->column = i;
@@ -67,6 +60,7 @@ void ABuildHandler::BeginPlay()
 				XPos = +rows / 2 * 3200.0f;
 			}
 		}
+		//Then save the level! Wooo!
 		SaveLevel();
 	}
 }
@@ -77,57 +71,20 @@ void ABuildHandler::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-/*
-void ABuildHandler::placePiece(int pieceNumber, ABuildingBlock* Spawner, UWorld* World)
-{
-FActorSpawnParameters SpawnInfo;
-FRotator rotation = FRotator::ZeroRotator;
-AActor* SpawnedPiece;
-/* KEY FOR PIECES
-1 - FourWayMazePieces
-2 - Corner Piece / South East
-3 - Corner Piece / South West
-4 - Corner Piece / North West
-5 - Corner Piece / North East
 
-if (pieceNumber <= 1) {
-//TSubclassOf<class AActor> WhatToSpawn = (UClass*)(LoadObject<UBlueprint>(NULL, TEXT("/Game/CreatedAssets/MazePieces/FourWayPiece/FbxScene_FourWayMazePiece.FbxScene_FourWayMazePiece"), NULL, LOAD_None, NULL)->GeneratedClass);
-if (MazePieces.IsValidIndex(0)) {
-SpawnedPiece = World->SpawnActor<AActor>(MazePieces[0], Spawner->GetActorLocation(), rotation, SpawnInfo);
-//SpawnedPiece->AttachToActor(Spawner, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-Spawner->piece = SpawnedPiece;
-SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-}
-
-}
-else if (pieceNumber < 6) {
-//TSubclassOf<class AActor> WhatToSpawn = (UClass*)(LoadObject<UBlueprint>(NULL, TEXT("/Game/CreatedAssets/MazePieces/CornerPiece/FbxScene_CornerPiece.FbxScene_CornerPiece"), NULL, LOAD_None, NULL)->GeneratedClass);
-int RotatorNumber = pieceNumber - 2;
-float RotationAmount = 90.f * RotatorNumber;
-FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-if (MazePieces.IsValidIndex(1)) {
-SpawnedPiece = World->SpawnActor<AActor>(MazePieces[1], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
-SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-SpawnedPiece->SetActorRotation(NewRotation);
-Spawner->piece = SpawnedPiece;
-//Spawner->AttachToActor(SpawnedPiece, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-//SpawnedPiece->SetupAttachment(Spawner->getRootComponent());
-}
-}
-else {
-UE_LOG(LogTemp, Warning, TEXT("Not Implemented Yet"));
-}
-
-}
-*/
-
-//Will Likely Change
-//DISCLAIMER: TESTING
+//This method takes an array of ends that represent which ends are "open" for hallways, and which ones are "closed". It always has size 4,
+//And is represented as true (open) or false (closed). East is index 0, south is index 1, west is index 2, and north is index 3
+//Rotation Number is how many times the piece is being rotated.
+//This is the most hard to understand method in the entire game thusfar, I need to do a better job of explaining/commenting.
 TArray<bool> ABuildHandler::Recalculate(TArray<bool> end, int rotationNumber)
 {
+	//Temp array of ints to carry which ones are open and should not be blocked off. 
 	TArray<int> valuedInts;
 
+	//Go through entire end array, if a end is true (meaning the end is open) created an int (newAmount) that holds the new end that should be open based
+	//off rotation. This is a bit confusing. If we have :- piece, with truth values true true false false, and we wanted to rotate it twice to -", with 
+	//truth values false, false, true, true, we would need to move every value in the truth array up two places. However, if it passes the 3rd index (or north)
+	//We would need to bring it back down to index 0 or east. That's what the code above does
 	for (int i = 0; i < 4; i++) {
 		if (end[i]) {
 			int newAmount = i + rotationNumber;
@@ -137,7 +94,7 @@ TArray<bool> ABuildHandler::Recalculate(TArray<bool> end, int rotationNumber)
 			valuedInts.Add(newAmount);
 		}
 	}
-
+	//This code takes the ints that represent the spots in the array we would need to be open and represents it as a bool of 4 values, which is what is needed.
 	TArray<bool> ends;
 	for (int i = 0; i < 4; i++)
 	{
@@ -147,7 +104,8 @@ TArray<bool> ABuildHandler::Recalculate(TArray<bool> end, int rotationNumber)
 		else {
 			ends.Add(false);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Bool value is: %s"), ends[i] ? "true" : "false");
+		//The below statement is for testing
+		//UE_LOG(LogTemp, Warning, TEXT("Bool value is: %s"), ends[i] ? "true" : "false");
 
 	}
 
@@ -218,187 +176,56 @@ void ABuildHandler::SaveLevel()
 	SaveGameInstance->FirstDungeon = *theDungeon;
 	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
 }
-//Will Likely Change
-//DISCLAIMER: TESTING
-//Change Return Type To Void
-//void ABuildHandler::placePiece(int pieceNumber, int rotationNumber, ABuildingBlock* Spawner, UWorld* World)
-TArray<bool> ABuildHandler::placePiece(int pieceNumber, int rotationNumber, ABuildingBlock* Spawner, UWorld* World)
-{
-	FActorSpawnParameters SpawnInfo;
-	FRotator rotation = FRotator::ZeroRotator;
-	//AActor* SpawnedPiece;
-	AMazePiece* SpawnedPiece;
-	/* KEY FOR PIECES
-	1 - FourWayMazePieces
-	2 - Corner Piece / South East
-	3 - Corner Piece / South West
-	4 - Corner Piece / North West
-	5 - Corner Piece / North East
-	*/
 
-	//Will Likely Delete
-	//DISCLAIMER: TESTING
+
+TArray<bool> ABuildHandler::placePiece(int pieceNumber, int rotationNumber, ABuildingBlock* Spawner)
+{
+	//Parameters explained
+		//pieceNumber - all pieces have a pieceNumber, the first piece is piece one. Right now, there are only about 4 piece numbers
+		//rotationNumber - how many times we have to rotate the piece
+		//Spawner - The place at which the piece will be placed
+
+	//Spawn Parameters, nothing special at this point
+	FActorSpawnParameters SpawnInfo;
+
+	//The MazePiece that is going to be spawned via this method.
+	AMazePiece* SpawnedPiece;
+
+
+	//These values represent whether there is a dead end at each side. East is index 0, south is index 1, west is index 2, and north is index 3
 	TArray<bool> pieceValues;
+	//Defaulted values into no dead ends.
 	pieceValues.Init(true, 4);
 
-	int indexNumber = pieceNumber - 1;
-	if (MazePieces.IsValidIndex(indexNumber)) {
+	//Check if MazePiece that we want to place is valid
+	if (MazePieces.IsValidIndex(pieceNumber - 1)) {
+		//^^^***piece numbers start at 1, indexes start at 0. Every reference to MazePieces array will therefore be made to pieceNumber - 1***
 
+		//Amount that we are going to rotate the object. For each value of rotationNumber, we will spin the MazePiece 90 degrees
 		float RotationAmount = 90.f * rotationNumber;
+		//A rotator with the value we just calculated to rotate
 		FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
 
-		SpawnedPiece = World->SpawnActor<AMazePiece>(MazePieces[indexNumber], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
+		//Spawn the piece in the world at spawner location and calculated rotation
+		SpawnedPiece = GetWorld()->SpawnActor<AMazePiece>(MazePieces[pieceNumber - 1], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
+		//Attach Component to Spawner in which it is built. This makes for fast removal and also keeps level hierachy making sense and looking clean
 		SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		//Set the actor rotation to the rotation calculated. This was done because spawning it with the rotation was not working. May be irrelevant now.
 		SpawnedPiece->SetActorRotation(NewRotation);
+		//Set the piece variable of the block used to place this piece, to the piece that was created
 		Spawner->piece = SpawnedPiece;
 
+		//Calculates the end values
+		//Set piece values equal to the default end values of the maze piece (for example, the straight hallway || has default values false, true, false, true
 		pieceValues = SpawnedPiece->bEnds;
-		if (!pieceValues.IsValidIndex(0)) {
-			pieceValues = { true, true, true, true };
-		}
+		//Calls method that takes rotation and calculates new values for ends. (for example, hallway rotated == will have changed values true, false, true, false based off the current rotation)
 		pieceValues = Recalculate(pieceValues, rotationNumber);
-
-		//Spawner->AttachToActor(SpawnedPiece, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		//SpawnedPiece->SetupAttachment(Spawner->getRootComponent());
-
+		
+		//Set the newly created maze piece variables for building block and build handler to their correct values.
 		SpawnedPiece->theBuildHandler = this;
 		SpawnedPiece->theBuildingBlock = Spawner;
 	}
 
-	//pieceValues.Init(false, 4);
-	/*
-	if (pieceNumber <= 1) {
-		//TSubclassOf<class AActor> WhatToSpawn = (UClass*)(LoadObject<UBlueprint>(NULL, TEXT("/Game/CreatedAssets/MazePieces/FourWayPiece/FbxScene_FourWayMazePiece.FbxScene_FourWayMazePiece"), NULL, LOAD_None, NULL)->GeneratedClass);
-
-		//pieceValues = { true, true, true, true };
-		if (MazePieces.IsValidIndex(0)) {
-
-			//Get pieces default end values and then recalculate them based off the rotation
-			pieceValues = Cast<AMazePiece>(MazePieces[0])->ends;
-			if (!pieceValues.IsValidIndex(0)) {
-				pieceValues = { true, true, true, true };
-			}
-			pieceValues = Recalculate(pieceValues, rotationNumber);
-			float RotationAmount = 90.f * rotationNumber;
-			FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-			SpawnedPiece = World->SpawnActor<AMazePiece>(MazePieces[0], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
-			SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			SpawnedPiece->SetActorRotation(NewRotation);
-			Spawner->piece = SpawnedPiece;
-			//Spawner->AttachToActor(SpawnedPiece, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			//SpawnedPiece->SetupAttachment(Spawner->getRootComponent());
-
-			SpawnedPiece->theBuildHandler = this;
-			SpawnedPiece->theBuildingBlock = Spawner;
-		}
-
-	}
-	else if (pieceNumber <= 2) {
-		//TSubclassOf<class AActor> WhatToSpawn = (UClass*)(LoadObject<UBlueprint>(NULL, TEXT("/Game/CreatedAssets/MazePieces/CornerPiece/FbxScene_CornerPiece.FbxScene_CornerPiece"), NULL, LOAD_None, NULL)->GeneratedClass);
-
-	//	pieceValues = { true, true, false, false };
-	//	pieceValues = Recalculate(pieceValues, rotationNumber);
-
-	//	float RotationAmount = 90.f * rotationNumber;
-	//	FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-		if (MazePieces.IsValidIndex(1)) {
-
-			//Get pieces default end values and then recalculate them based off the rotation
-			pieceValues = Cast<AMazePiece>(MazePieces[1])->ends;
-			if (!pieceValues.IsValidIndex(0)) {
-				pieceValues = { true, true, true, true };
-			}
-			pieceValues = Recalculate(pieceValues, rotationNumber);
-			float RotationAmount = 90.f * rotationNumber;
-			FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-			SpawnedPiece = World->SpawnActor<AMazePiece>(MazePieces[1], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
-			SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			SpawnedPiece->SetActorRotation(NewRotation);
-			Spawner->piece = SpawnedPiece;
-			//Spawner->AttachToActor(SpawnedPiece, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			//SpawnedPiece->SetupAttachment(Spawner->getRootComponent());
-
-			SpawnedPiece->theBuildHandler = this;
-			SpawnedPiece->theBuildingBlock = Spawner;
-
-		}
-	}
-	else if (pieceNumber <= 3)
-	{
-
-		//pieceValues = { false, true, false, true };
-		//pieceValues = Recalculate(pieceValues, rotationNumber);
-		//pieceValues = Recalculate(pieceValues, rotationNumber);
-
-		//float RotationAmount = 90.f * rotationNumber;
-
-		//FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-		if (MazePieces.IsValidIndex(2)) {
-			//Get pieces default end values and then recalculate them based off the rotation
-			pieceValues = Cast<AMazePiece>(MazePieces[2])->ends;
-			if (!pieceValues.IsValidIndex(0)) {
-				pieceValues = { true, true, true, true };
-			}
-			pieceValues = Recalculate(pieceValues, rotationNumber);
-			float RotationAmount = 90.f * rotationNumber;
-			FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-
-			SpawnedPiece = World->SpawnActor<AMazePiece>(MazePieces[2], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
-			SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			SpawnedPiece->SetActorRotation(NewRotation);
-			Spawner->piece = SpawnedPiece;
-			//Spawner->AttachToActor(SpawnedPiece, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			//SpawnedPiece->SetupAttachment(Spawner->getRootComponent());
-
-			SpawnedPiece->theBuildHandler = this;
-			SpawnedPiece->theBuildingBlock = Spawner;
-		}
-	}
-	else if (pieceNumber >= 4) {
-
-		//pieceValues = { false, true, true, true };
-		//pieceValues = Recalculate(pieceValues, rotationNumber);
-		//pieceValues = Recalculate(pieceValues, rotationNumber);
-
-
-		//float RotationAmount = 90.f * rotationNumber;
-
-		//FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-		if (MazePieces.IsValidIndex(3)) {
-
-			//Get pieces default end values and then recalculate them based off the rotation
-			pieceValues = Cast<AMazePiece>(MazePieces[1])->ends;
-			if (!pieceValues.IsValidIndex(0)) {
-				pieceValues = { true, true, true, true };
-			}
-			pieceValues = Recalculate(pieceValues, rotationNumber);
-			float RotationAmount = 90.f * rotationNumber;
-			FRotator NewRotation = FRotator(0.f, RotationAmount, 0.f);
-
-			SpawnedPiece = World->SpawnActor<AMazePiece>(MazePieces[3], Spawner->GetActorLocation(), NewRotation, SpawnInfo);
-			SpawnedPiece->AttachToComponent(Spawner->getRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			SpawnedPiece->SetActorRotation(NewRotation);
-			Spawner->piece = SpawnedPiece;
-			//Spawner->AttachToActor(SpawnedPiece, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			//SpawnedPiece->SetupAttachment(Spawner->getRootComponent());
-
-			SpawnedPiece->theBuildHandler = this;
-			SpawnedPiece->theBuildingBlock = Spawner;
-		}
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Not Implemented Yet"));
-		pieceValues = { false, false, false, false };
-	}
-	//BuildingBlockColumns[Spawner->column]->BuildingBlockRows[Spawner->row]->savePieceNumber = pieceNumber;
-	//BuildingBlockColumns[Spawner->column]->BuildingBlockRows[Spawner->row]->saveRotNumber = rotationNumber;
-//	BuildingBlockColumns[Spawner->column]->BuildingBlockRows[Spawner->row]->pieceNumber = pieceNumber;
-	*/
+	//Return end values so it is known what ends to delete
 	return pieceValues;
 }
